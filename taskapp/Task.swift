@@ -21,8 +21,7 @@ class Task: Object {
     
     // カテゴリー
     dynamic var category = ""
-    
-    dynamic var name = ""
+
     
     /// 日時
     dynamic var date = NSDate()

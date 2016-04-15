@@ -7,96 +7,74 @@
 //
 
 import UIKit
-import RealmSwift   // ←追加
+import RealmSwift
 
 class ViewController: UIViewController, UISearchBarDelegate {
     
     @IBOutlet weak var tableView: UITableView!
     
-    // Realmインスタンスを取得する
-    let realm = try! Realm()  // ←追加
+    let realm = try! Realm()
     
-    // DB内のタスクが格納されるリスト。
-    // 日付近い順\順でソート：降順
-    // 以降内容をアップデートするとリスト内は自動的に更新される。
-    let taskArray = try! Realm().objects(Task).sorted("date", ascending: false)   // ←追加
+    var taskArray = try! Realm().objects(Task).sorted("date", ascending: false)
     
+    var category = try! Realm().objects(Task).filter("category IN {%@, %@, %@, %@, %@}","1", "2", "3", "4", "5")
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-
-    }
+       }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
     
-    
     @IBOutlet weak var search: UISearchBar!
     
     var searchFlag: Bool = false
-    
-    
-    
-    var category = try! Realm().objects(Task).filter("name IN {%@, %@, %@, %@, %@}","1", "2", "3", "4", "5")
-    
     
     func searchBarSearchButtonClicked(searchBar: UISearchBar) {
         search.resignFirstResponder()
     }
     
+    // 検索する時の処理
     func searchBarTextDidEndEditing(searchBar: UISearchBar) {
-        
-        if let search = searchBar.text {
-              category = try! Realm().objects(Task).filter("category = '\(search)'")
+        searchFlag = true
+        if let search = searchBar.text{
+            category = try! Realm().objects(Task).filter("category = '\(search)'")
         } else {
-            
-           category = try! Realm().objects(Task).filter("name IN {%@, %@, %@, %@, %@}","1", "2", "3", "4", "5")            
+            category = try! Realm().objects(Task).filter("category IN {%@, %@, %@, %@, %@}","1", "2", "3", "4", "5")
         }
         
         tableView.reloadData()
     }
     
+    func searchBar(searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchText.utf16.count == 0 {
+            searchFlag = false
+            tableView.reloadData()
+        }
+    }
     
-
     
     // MARK: UITableViewDataSourceプロトコルのメソッド
     // データの数（＝セルの数）を返すメソッド
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        
-        if(category.count == 0){
-            searchFlag = false;
-        } else {
-            searchFlag = true;
-        }
-        
-        
         if searchFlag == true {
             
-           return category.count
-        
-            } else {
+            return category.count
             
+        } else {
+
            return taskArray.count
-            
         }
     }
-    
-    
     
     // 各セルの内容を返すメソッド
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         // 再利用可能な cell を得る
         let cell = tableView.dequeueReusableCellWithIdentifier("Cell", forIndexPath: indexPath)
-        
-        if(category.count == 0){
-            searchFlag = false;
-        } else {
-            searchFlag = true;
-        }
         
         if searchFlag == true {
             
@@ -164,13 +142,10 @@ class ViewController: UIViewController, UISearchBarDelegate {
         
 }
     
-    
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         tableView.reloadData()
-
     }
-    
     
     // segue で画面遷移するに呼ばれる
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?){
